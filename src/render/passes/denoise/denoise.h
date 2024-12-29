@@ -26,6 +26,7 @@ public:
 	void resize(Vector2i size);
 
 	void setHaveGeometry(bool haveGeometry);
+	bool haveGeometry() const { return haveGeometryBuffer; }
 
 	void setPixelFormat(PixelFormat format);
 	void setProps(bool haveGeometry, PixelFormat format);
@@ -48,36 +49,28 @@ public:
 	void render(RenderContext *context) override;
 	void renderUI() override;
 	void resize(const Vector2i &size) override;
-	// true: have special task(CtxDenoiseGBuffer)
-	void checkSpecTask(RenderContext *context);
 	string getName() const override { return "DenoisePass"; }
 
+	void denoise(float *rgb, float *result, DenoiseBackend::PixelFormat pixelFormat, float *normal,
+				 float *albedo);
+
 	friend void from_json(const json &j, DenoisePass &p) {
-		p.mDoSpecTask  = j.value("doSpecTask", false);
-		p.mUseGeometry = j.value("useGeometry", false);
+		p.mUseGeometry					= j.value("useGeometry", false);
+		p.mPrepareGeometryBufferOutside = j.value("prepareGeometryBufferOutside", false);
 	}
 
 	friend void to_json(json &j, const DenoisePass &p) {
-		j.update({{"doSpecTask", p.mDoSpecTask}, {"useGeometry", p.mUseGeometry}});
+		j.update({{"useGeometry", p.mUseGeometry}});
 	}
 
 public:
 	constexpr static char CTX_JSON_GBUFFER[] = "DENOISE_GBUFFER";
 
 private:
-	bool mDoSpecTask{false};
+	bool mPrepareGeometryBufferOutside{false};
 	bool mUseGeometry{};
 	TypedBuffer<RGBA> mColorBuffer;
 	DenoiseBackend mBackend;
 };
-
-typedef struct {
-	bool mState;
-	float *mColorBuffer;
-	float *mAlbedoBuffer;
-	float *mNormalBuffer;
-	float *mDenoisedBuffer;
-	DenoiseBackend::PixelFormat mPixelFormat;
-} CtxDenoiseGBuffer;
 
 NAMESPACE_END(krr)

@@ -209,7 +209,7 @@ protected:
 	OptixInitializeParameters optixParameters;
 
 public:
-	static const size_t OPTIX_MAX_RAY_TYPES = 3;	// Radiance, Shadow, ShadowTransmission
+	static const size_t OPTIX_MAX_RAY_TYPES = 4;	// Radiance, Shadow, ShadowTransmission, ...
 	static OptixModule createOptixModule(OptixDeviceContext optixContext, const char* ptx);
 	static OptixPipelineCompileOptions getPipelineCompileOptions();
 

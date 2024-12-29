@@ -163,12 +163,6 @@ void DenoiseBackend::setPixelFormat(PixelFormat format) {
 }
 
 void DenoisePass::render(RenderContext *context) {
-	checkSpecTask(context);
-
-	if (mDoSpecTask) {
-		return;
-	}
-
 	PROFILE("Denoise");
 
 	// TODO: The general case of denoising guided by geometry features is not implemented yet TaT,
@@ -192,10 +186,17 @@ void DenoisePass::render(RenderContext *context) {
 
 void DenoisePass::renderUI() {
 	ui::Checkbox("Enabled", &mEnable);
-	ui::Checkbox("mDoSpecTask", &mDoSpecTask);
-	if (!mEnable || mDoSpecTask) return;
-	if (ui::Checkbox("Use geometry buffer", &mUseGeometry)) {
-		Log(Fatal, "Denoising guided by geometry features is not implemented yet TaT");
+	if (!mEnable) {
+		return;
+	}
+	ui::Checkbox("Use geometry buffer", &mUseGeometry);
+	if (mUseGeometry) {
+		if (mPrepareGeometryBufferOutside) {
+			ui::SameLine();
+			ui::Text("[You should prepare geometry buffer outside]");
+		} else {
+			Log(Fatal, "Denoising guided by geometry features is not implemented yet TaT");
+		}
 		mBackend.setHaveGeometry(mUseGeometry);
 	}
 }
@@ -206,30 +207,18 @@ void DenoisePass::resize(const Vector2i &size) {
 	mColorBuffer.resize(size[0] * size[1]);
 }
 
-void DenoisePass::checkSpecTask(RenderContext *context) {
-
-	json *j = context->getJson();
-	if (j->find(DenoisePass::CTX_JSON_GBUFFER) == j->end()) {
-		return;
-	}
-	const json &denoisedData = j->at(DenoisePass::CTX_JSON_GBUFFER);
-	CtxDenoiseGBuffer *ctxDenoiseGBuffer =
-		(CtxDenoiseGBuffer *) (void *) denoisedData.get<uint64_t>();
-	if (ctxDenoiseGBuffer->mState) {
-		return;
+void DenoisePass::denoise(float *rgb, float *result, DenoiseBackend::PixelFormat pixelFormat,
+						  float *normal, float *albedo) {
+	if (mUseGeometry) {
+		if (normal == nullptr || albedo == nullptr) {
+			Log(Fatal, "Normal and albedo should be provided when using geometry buffer.");
+		}
+	} else {
+		normal = albedo = nullptr;
 	}
 
-	// denoise
-	const bool haveGeometry = (ctxDenoiseGBuffer->mAlbedoBuffer != nullptr) &&
-							  (ctxDenoiseGBuffer->mNormalBuffer != nullptr);
-
-	mBackend.setProps(haveGeometry, ctxDenoiseGBuffer->mPixelFormat);
-	mBackend.denoise(KRR_DEFAULT_STREAM, ctxDenoiseGBuffer->mColorBuffer,
-					 ctxDenoiseGBuffer->mNormalBuffer, ctxDenoiseGBuffer->mAlbedoBuffer,
-					 ctxDenoiseGBuffer->mDenoisedBuffer);
-
-	ctxDenoiseGBuffer->mState = true;
-	return;
+	mBackend.setProps(mUseGeometry, pixelFormat);
+	mBackend.denoise(KRR_DEFAULT_STREAM, rgb, normal, albedo, result);
 }
 
 KRR_REGISTER_PASS_DEF(DenoisePass);

@@ -120,7 +120,6 @@ public:
 	void resize(const Vector2i size);
 	void sychronizeCuda();
 	void sychronizeVulkan();
-	json *getJson() { return &mJson; }
 
 private: 
 	friend class CudaScope;
@@ -134,7 +133,6 @@ private:
 	vkrhi::CuVkSemaphore mVulkanSemaphore; 
 	uint64_t mCudaSemaphoreValue{};
 	CUstream mCudaStream;
-	json mJson{};
 };
 
 class RenderPass{

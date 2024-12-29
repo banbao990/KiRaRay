@@ -65,7 +65,7 @@ protected:
 				 {"log", p.mLogResults},
 				 {"save", p.mSaveResults},
 				 {"vJetMax", p.mJetColorMapVMax},
-				 {"vJetMaxAdjusted", p.mJetColorMapVMax}};
+				 {"vJetMaxAdjusted", p.mJetColorMapVMaxAdjusted}};
 	}
 
 	friend void from_json(const json &j, ErrorMeasurePass &p) {

@@ -33,7 +33,7 @@ void acculumate(Array4<DType> *accumBuffer, CudaRenderTarget currentBuffer, size
 	GPUParallelFor(
 		nPixels,
 		[=] KRR_DEVICE(int i) mutable {
-			DType currentWeight		   = static_cast<DType>(1) / (accumCount + 1);
+			DType currentWeight		   = static_cast<DType>(1) / (accumCount + int(!stopCondition));
 			Array4<DType> currentPixel = currentBuffer.read(i).cast<DType>();
 			if (accumCount > 0) {
 				if (mode == AccumulatePass::Mode::MovingAverage) // moving average mode
@@ -89,10 +89,10 @@ void AccumulatePass::render(RenderContext *context) {
 void AccumulatePass::endFrame(RenderContext *context) {
 	if (mTask.getBudgetType() != BudgetType::None && mTask.isFinished() && mExitOnFinish)
 		gpContext->requestExit();
-	if (mSaveEvery && mAccumCount % mSaveEvery == 0) {
+	if (mSaveEvery && mAccumCount && mAccumCount % mSaveEvery == 0) {
 		string outputName = gpContext->getGlobalConfig().contains("name")
 								? gpContext->getGlobalConfig()["name"]
-								: "result" + std::to_string(mAccumCount);
+								: "result_" + std::to_string(mAccumCount);
 		saveImage(File::outputDir() / (outputName + ".exr"));
 	}
 }

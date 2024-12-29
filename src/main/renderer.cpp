@@ -129,12 +129,10 @@ void RenderApp::renderUI() {
 	static bool showCursorPos{ false };
 	Profiler::instance().setEnabled(showProfiler);
 	if (!sShowUI) return;
-	if (!sUIAlphaOff) {
 		// this sets the global transparency of UI windows.
-		ui::PushStyleVar(ImGuiStyleVar_Alpha, 0.8);
+	ui::PushStyleVar(ImGuiStyleVar_Alpha, sUIAlphaOff ? 1.0 : 0.8);
 		// this sets the transparency of the main menubar.
-		ui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
-	}
+	ui::PushStyleVar(ImGuiStyleVar_Alpha, sUIAlphaOff ? 1.0 : 0.5);
 	if (ui::BeginMainMenuBar()) {
 		ui::PopStyleVar(1);
 		if (ui::BeginMenu("Views")) {
@@ -183,9 +181,11 @@ void RenderApp::renderUI() {
 			mScene->renderUI();
 		}
 		size_t pid = 0;
-		for (auto& p : mRenderPasses) {
+		for (auto &p : mRenderPasses) {
 			ui::PushID(pid++);
-			if (p && ui::CollapsingHeader(p->getName().c_str())) 
+			if (p && ui::CollapsingHeader(p->getName().c_str(), p->enabled()
+																	? ImGuiTreeNodeFlags_DefaultOpen
+																	: ImGuiTreeNodeFlags_None))
 				p->renderUI();
 			ui::PopID();
 		}
