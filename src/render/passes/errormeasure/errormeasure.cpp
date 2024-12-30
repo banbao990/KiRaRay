@@ -18,8 +18,12 @@ void ErrorMeasurePass::render(RenderContext *context) {
 	PROFILE("Metric calculation");
 	size_t n_elements = getFrameSize()[0] * getFrameSize()[1];
 	if (mNeedsEvaluate && mReferenceImage && mReferenceImage->isValid()) {
-		CHECK_LOG(mReferenceImage->getSize() == getFrameSize(),
-				  "ErrorMeasure::Reference image size does not match frame size!");
+		if (mReferenceImage->getSize() != getFrameSize()) {
+			Log(Warning, "ErrorMeasure::Reference image size does not match frame size!");
+			mNeedsEvaluate		= false;
+			mContinuousEvaluate = false;
+			return;
+		}
 		auto frameBuffer = context->getColorTexture()->getCudaRenderTarget();
 
 		// show reference image
@@ -79,6 +83,14 @@ void ErrorMeasurePass::renderUI() {
 		}
 
 		ui::Text("Reference image: %s", mReferenceImagePath.c_str());
+		if (getFrameSize() != mReferenceImage->getSize()) {
+			ui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
+			ui::Text("Reference image size does not match frame size!");
+			ui::PopStyleColor();
+			mShowReferenceImage = false;
+			return;
+		}
+
 		ui::Checkbox("Show Reference Image", &mShowReferenceImage);
 		if (mShowReferenceImage) {
 			return;

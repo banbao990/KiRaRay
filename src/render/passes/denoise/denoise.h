@@ -26,18 +26,18 @@ public:
 	void resize(Vector2i size);
 
 	void setHaveGeometry(bool haveGeometry);
-	bool haveGeometry() const { return haveGeometryBuffer; }
 
 	void setPixelFormat(PixelFormat format);
+	PixelFormat getPixelFormat() const { return mPixelFormat; }
 	void setProps(bool haveGeometry, PixelFormat format);
 
 private:
-	Vector2i resolution;
-	PixelFormat pixelFormat{PixelFormat::FLOAT4};
-	bool haveGeometryBuffer{}, initialized{};
-	OptixDenoiser denoiserHandle{};
-	OptixDenoiserSizes memorySizes;
-	CUDABuffer denoiserState, scratchBuffer, intensity;
+	Vector2i mResolution;
+	PixelFormat mPixelFormat{PixelFormat::FLOAT4};
+	bool mHaveGeometryBuffer{}, mInitialized{};
+	OptixDenoiser mDenoiserHandle{};
+	OptixDenoiserSizes mMemorySizes;
+	CUDABuffer mDenoiserState, mScratchBuffer, mIntensity;
 };
 
 class DenoisePass : public RenderPass {
@@ -53,6 +53,7 @@ public:
 
 	void denoise(float *rgb, float *result, DenoiseBackend::PixelFormat pixelFormat, float *normal,
 				 float *albedo);
+	bool useGeometry() const { return mUseGeometry; }
 
 	friend void from_json(const json &j, DenoisePass &p) {
 		p.mUseGeometry					= j.value("useGeometry", false);
