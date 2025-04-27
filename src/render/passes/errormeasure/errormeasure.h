@@ -20,12 +20,12 @@ public:
 	using SharedPtr = std::shared_ptr<ErrorMeasurePass>;
 	KRR_REGISTER_PASS_DEC(ErrorMeasurePass);
 
-	ErrorMeasurePass() = default;
+	ErrorMeasurePass()	= default;
 	~ErrorMeasurePass() = default;
-	void beginFrame(RenderContext* context) override;
-	void render(RenderContext* context) override;
+	void beginFrame(RenderContext *context) override;
+	void render(RenderContext *context) override;
 	void renderUI() override;
-	void resize(const Vector2i& size) override;
+	void resize(const Vector2i &size) override;
 	void finalize() override;
 
 	string getName() const override { return "ErrorMeasurePass"; }
@@ -39,16 +39,16 @@ protected:
 
 	void reset();
 	bool loadReferenceImage(const string &path);
-	
+
 	std::shared_ptr<Image> mReferenceImage;
 	TypedBuffer<RGBA> mReferenceImageBuffer;
 	bool mShowReferenceImage{false};
-	ErrorMetric mMetric{ ErrorMetric::RelMSE };
+	ErrorMetric mMetric{ErrorMetric::RelMSE};
 	json mLastResult;
 	string mReferenceImagePath;
 	bool mNeedsEvaluate{}, mContinuousEvaluate{};
 	bool mLogResults{}, mSaveResults{};
-	size_t mFrameNumber{ 0 }, mEvaluateInterval{ 1 };
+	size_t mFrameNumber{0}, mEvaluateInterval{1};
 	std::vector<EvaluationData> mEvaluationResults;
 	CpuTimer::TimePoint mStartTime;
 
@@ -76,6 +76,7 @@ protected:
 		p.mSaveResults			   = j.value("save", false);
 		p.mJetColorMapVMax		   = j.value("vJetMax", 0.01f);
 		p.mJetColorMapVMaxAdjusted = j.value("vJetMaxAdjusted", 0.05f);
+		p.mShowReferenceImage	   = j.value("showReferenceImage", false);
 
 		if (gpContext->getGlobalConfig().contains("reference"))
 			p.loadReferenceImage(gpContext->getGlobalConfig().at("reference"));

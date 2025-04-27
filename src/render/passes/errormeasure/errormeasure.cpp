@@ -6,6 +6,7 @@ NAMESPACE_BEGIN(krr)
 
 namespace {
 static const char *metricNames[] = {"MSE", "MAPE", "SMAPE", "RelMSE"};
+static char referencePath[256]	 = "";
 }
 
 void ErrorMeasurePass::beginFrame(RenderContext *context) {
@@ -17,14 +18,31 @@ void ErrorMeasurePass::beginFrame(RenderContext *context) {
 void ErrorMeasurePass::render(RenderContext *context) {
 	PROFILE("Metric calculation");
 	size_t n_elements = getFrameSize()[0] * getFrameSize()[1];
-	if (mNeedsEvaluate && mReferenceImage && mReferenceImage->isValid()) {
+
+	if ((mShowReferenceImage || mNeedsEvaluate) && mReferenceImage && mReferenceImage->isValid()) {
 		if (mReferenceImage->getSize() != getFrameSize()) {
 			Log(Warning, "ErrorMeasure::Reference image size does not match frame size!");
 			mNeedsEvaluate		= false;
 			mContinuousEvaluate = false;
+			mShowReferenceImage = false;
 			return;
 		}
+
 		auto frameBuffer = context->getColorTexture()->getCudaRenderTarget();
+
+		if (mNeedsEvaluate) {
+			float result =
+				calc_metric(frameBuffer, reinterpret_cast<RGBA *>(mReferenceImageBuffer.data()),
+							n_elements, mMetric, mShowPixelError, mJetColorMapOn, mJetColorMapVMax);
+			mLastResult = {{string(metricNames[(int) mMetric]), result}};
+
+			if (mLogResults)
+				Log(Info, "Evaluating frame #%zd: %s", mFrameNumber, mLastResult.dump().c_str());
+			if (mSaveResults)
+				mEvaluationResults.push_back(
+					{mFrameNumber, CpuTimer::calcElapsedTime(mStartTime) * 1e-3, mLastResult});
+			mNeedsEvaluate = false;
+		}
 
 		// show reference image
 		if (mShowReferenceImage) {
@@ -33,19 +51,7 @@ void ErrorMeasurePass::render(RenderContext *context) {
 				n_elements,
 				[=] KRR_DEVICE(int pixelId) mutable { frameBuffer.write(ref[pixelId], pixelId); },
 				KRR_DEFAULT_STREAM);
-			return;
 		}
-
-		float result =
-			calc_metric(frameBuffer, reinterpret_cast<RGBA *>(mReferenceImageBuffer.data()),
-						n_elements, mMetric, mShowPixelError, mJetColorMapOn, mJetColorMapVMax);
-		mLastResult = {{string(metricNames[(int) mMetric]), result}};
-		if (mLogResults)
-			Log(Info, "Evaluating frame #%zd: %s", mFrameNumber, mLastResult.dump().c_str());
-		if (mSaveResults)
-			mEvaluationResults.push_back(
-				{mFrameNumber, CpuTimer::calcElapsedTime(mStartTime) * 1e-3, mLastResult});
-		mNeedsEvaluate = false;
 	}
 }
 
@@ -73,7 +79,6 @@ void ErrorMeasurePass::renderUI() {
 	ui::Checkbox("Enabled", &mEnable);
 	if (mEnable) {
 		if (ui::Combo("Metric", (int *) &mMetric, metricNames, (int) ErrorMetric::Count)) reset();
-		static char referencePath[256] = "";
 		ui::InputText("Reference", referencePath, sizeof(referencePath));
 		if (ui::Button("Load")) {
 			loadReferenceImage(referencePath);
@@ -92,9 +97,6 @@ void ErrorMeasurePass::renderUI() {
 		}
 
 		ui::Checkbox("Show Reference Image", &mShowReferenceImage);
-		if (mShowReferenceImage) {
-			return;
-		}
 
 		ui::Checkbox("Continuous evaluate", &mContinuousEvaluate);
 		if (mContinuousEvaluate)
@@ -140,6 +142,7 @@ bool ErrorMeasurePass::loadReferenceImage(const string &path) {
 		reset();
 		mReferenceImagePath = path;
 		Log(Info, "ErrorMeasure::Loaded reference image from %s.", path.c_str());
+		strcpy(referencePath, path.c_str());
 	} else {
 		Log(Error, "ErrorMeasure::Failed to load reference image from %s", path.c_str());
 	}
