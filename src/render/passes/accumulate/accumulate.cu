@@ -90,9 +90,10 @@ void AccumulatePass::endFrame(RenderContext *context) {
 	if (mTask.getBudgetType() != BudgetType::None && mTask.isFinished() && mExitOnFinish)
 		gpContext->requestExit();
 	if (mSaveEvery && mAccumCount && mAccumCount % mSaveEvery == 0) {
-		string outputName = gpContext->getGlobalConfig().contains("name")
-								? gpContext->getGlobalConfig()["name"]
-								: "result_" + std::to_string(mAccumCount);
+		string outputName = (gpContext->getGlobalConfig().contains("name")
+								 ? gpContext->getGlobalConfig().value("name", "")
+								 : "result") +
+							std::string("_") + std::to_string(mAccumCount);
 		saveImage(File::outputDir() / (outputName + ".exr"));
 	}
 }

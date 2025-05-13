@@ -89,6 +89,6 @@ json Context::getGlobalConfig() const { return globalConfig; }
 
 nvrhi::vulkan::IDevice *Context::getDefaultVkDevice() const { return defaultVkDevice; }
 
-void Context::updateGlobalConfig(const json &config) { globalConfig.update(config); }
+void Context::updateGlobalConfig(const json &config) { globalConfig.update(config, true); }
 
 NAMESPACE_END(krr)
