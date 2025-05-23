@@ -81,7 +81,7 @@ KRR_CALLABLE float smape(const RGB &y, const RGB &ref) {
 KRR_CALLABLE float rel_mse(const RGB &y, const RGB &ref) {
 	CHECK_INVALID(ref)
 	if constexpr (ERROR_EPS)
-		return ((y - ref) / (ref + ERROR_EPS)).square().mean();
+		return ((y - ref).square() / (ref.square() + ERROR_EPS)).mean();
 	else {
 		RGB ret{}, diff = (y - ref).abs();
 		for (int ch = 0; ch < RGB::dim; ch++)
