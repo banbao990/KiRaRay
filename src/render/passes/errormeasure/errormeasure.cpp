@@ -7,12 +7,13 @@ NAMESPACE_BEGIN(krr)
 namespace {
 static const char *metricNames[] = {"MSE", "MAPE", "SMAPE", "RelMSE"};
 static char referencePath[256]	 = "";
-}
+} // namespace
 
 void ErrorMeasurePass::beginFrame(RenderContext *context) {
 	if (!mFrameNumber) reset();
 	mFrameNumber++;
 	mNeedsEvaluate |= mContinuousEvaluate && (mFrameNumber % mEvaluateInterval == 0);
+	mNeedsEvaluate |= gpContext->shouldQuit(); // last frame in exp
 }
 
 void ErrorMeasurePass::render(RenderContext *context) {
@@ -63,7 +64,18 @@ void ErrorMeasurePass::finalize() {
 								 ? gpContext->getGlobalConfig()["name"]
 								 : "result";
 		fs::path save_path = File::outputDir() / "error" / (output_name + ".json");
+
 		json timesteps, timepoints, data, result;
+
+		if (mExpSave) {
+			// read save_path
+			const auto globalConfig = gpContext->getGlobalConfig();
+			if (globalConfig.contains("exp_output_file")) {
+				save_path = globalConfig.value("exp_output_file", "") + ".json";
+				result	  = File::loadJSON(save_path);
+			}
+		}
+
 		for (const EvaluationData &e : mEvaluationResults) {
 			timesteps.push_back((int) e.timestep);
 			timepoints.push_back((float) e.timepoint);

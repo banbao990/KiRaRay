@@ -47,7 +47,7 @@ protected:
 	json mLastResult;
 	string mReferenceImagePath;
 	bool mNeedsEvaluate{}, mContinuousEvaluate{};
-	bool mLogResults{}, mSaveResults{};
+	bool mLogResults{}, mSaveResults{}, mExpSave{};
 	size_t mFrameNumber{0}, mEvaluateInterval{1};
 	std::vector<EvaluationData> mEvaluationResults;
 	CpuTimer::TimePoint mStartTime;
@@ -77,6 +77,9 @@ protected:
 		p.mJetColorMapVMax		   = j.value("vJetMax", 0.01f);
 		p.mJetColorMapVMaxAdjusted = j.value("vJetMaxAdjusted", 0.05f);
 		p.mShowReferenceImage	   = j.value("showReferenceImage", false);
+
+		p.mExpSave = j.value("exp_save", false);
+		p.mSaveResults |= p.mExpSave;
 
 		if (gpContext->getGlobalConfig().contains("reference"))
 			p.loadReferenceImage(gpContext->getGlobalConfig().at("reference"));
