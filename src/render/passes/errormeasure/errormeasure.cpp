@@ -13,12 +13,12 @@ void ErrorMeasurePass::beginFrame(RenderContext *context) {
 	if (!mFrameNumber) reset();
 	mFrameNumber++;
 	mNeedsEvaluate |= mContinuousEvaluate && (mFrameNumber % mEvaluateInterval == 0);
-	mNeedsEvaluate |= gpContext->shouldQuit(); // last frame in exp
 }
 
 void ErrorMeasurePass::render(RenderContext *context) {
 	PROFILE("Metric calculation");
 	size_t n_elements = getFrameSize()[0] * getFrameSize()[1];
+	mNeedsEvaluate |= gpContext->shouldQuit(); // last frame in exp
 
 	if ((mShowReferenceImage || mNeedsEvaluate) && mReferenceImage && mReferenceImage->isValid()) {
 		if (mReferenceImage->getSize() != getFrameSize()) {
