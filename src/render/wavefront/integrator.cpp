@@ -148,7 +148,7 @@ void WavefrontPathTracer::generateScatterRays(int depth) {
 
 			/* sample BSDF */
 			BSDFSample sample = BxDF::sample(intr, woLocal, sampler, (int) intr.sd.bsdfType);
-			if (sample.pdf != 0 && sample.f.any()) {
+			if (sample.pdf > 0 && sample.f.any()) {
 				Vector3f wiWorld = intr.toWorld(sample.wi);
 				RayWorkItem r	 = {};
 				r.bsdfType		 = sample.flags;
