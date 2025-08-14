@@ -55,6 +55,7 @@ protected:
 	bool mShowPixelError{false};
 	bool mJetColorMapOn{false};
 	float mJetColorMapVMax{0.01f};
+	float mJetColorMapVMaxUpBound{3.0f}; // log2 scale
 	float mJetColorMapVMaxAdjusted{0.05f};
 
 	friend void to_json(json &j, const ErrorMeasurePass &p) {

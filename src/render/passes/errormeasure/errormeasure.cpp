@@ -123,7 +123,13 @@ void ErrorMeasurePass::renderUI() {
 		if (mShowPixelError) {
 			mEvaluateInterval = 1;
 			ui::Checkbox("Jet Colormap", &mJetColorMapOn);
-			ui::SliderFloat("Jet vMax", &mJetColorMapVMax, 0.0f, mJetColorMapVMaxAdjusted, "%.4f");
+			if (mJetColorMapOn) {
+				ui::SliderFloat("Show Scalar Jet UpBound[log2]", &mJetColorMapVMaxUpBound, -5.0f,
+								3.0f);
+				const float jetMaxExp = pow(2, mJetColorMapVMaxUpBound);
+				ui::SliderFloat("Jet vMax", &mJetColorMapVMax, 0.0f, jetMaxExp, "%.4f");
+				mJetColorMapVMax = clamp(mJetColorMapVMax, 0.1f, jetMaxExp);
+			}
 		}
 	}
 }
