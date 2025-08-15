@@ -20,6 +20,7 @@ public:
 		Aces,
 		Uncharted2,
 		HejiHable,
+		Lin2Srgb,
 		NumsOperators,
 	};
 
@@ -60,6 +61,7 @@ KRR_ENUM_DEFINE(ToneMappingPass::Operator, {
 	{ ToneMappingPass::Operator::Aces, "aces" },
 	{ ToneMappingPass::Operator::Uncharted2, "uncharted2" },
 	{ ToneMappingPass::Operator::HejiHable, "hejihable" },
+	{ ToneMappingPass::Operator::Lin2Srgb, "lin2srgb" },
 })
 
 NAMESPACE_END(krr)
