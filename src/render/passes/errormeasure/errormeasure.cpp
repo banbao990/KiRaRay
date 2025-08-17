@@ -128,7 +128,7 @@ void ErrorMeasurePass::renderUI() {
 								3.0f);
 				const float jetMaxExp = pow(2, mJetColorMapVMaxUpBound);
 				ui::SliderFloat("Jet vMax", &mJetColorMapVMax, 0.0f, jetMaxExp, "%.4f");
-				mJetColorMapVMax = clamp(mJetColorMapVMax, 0.1f, jetMaxExp);
+				mJetColorMapVMax = clamp(mJetColorMapVMax, 0.0001f, jetMaxExp);
 			}
 		}
 	}
