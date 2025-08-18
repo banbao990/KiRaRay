@@ -9,7 +9,7 @@
 
 NAMESPACE_BEGIN(krr)
 
-class ToneMappingPass: public RenderPass {
+class ToneMappingPass : public RenderPass {
 public:
 	using SharedPtr = std::shared_ptr<ToneMappingPass>;
 	KRR_REGISTER_PASS_DEC(ToneMappingPass);
@@ -21,6 +21,7 @@ public:
 		Uncharted2,
 		HejiHable,
 		Lin2Srgb,
+		Jet,
 		NumsOperators,
 	};
 
@@ -28,40 +29,46 @@ public:
 
 	void renderUI() override;
 
-	void setOperator(Operator toneMappingOperator)
-		{mOperator = toneMappingOperator; }
+	void setOperator(Operator toneMappingOperator) { mOperator = toneMappingOperator; }
 	Operator getOperator() const { return mOperator; }
-	void render(RenderContext* context) override;
+	void render(RenderContext *context) override;
 
 	string getName() const override { return "ToneMappingPass"; }
 
 private:
-	friend void to_json(json& j, const ToneMappingPass& p) {
-		j = json{ 
-			{ "exposure", p.mExposureCompensation }, 
-			{ "operator", p.mOperator },
-			{ "gamma", p.mUseGamma }
-		};
+	friend void to_json(json &j, const ToneMappingPass &p) {
+		j = json{{"exposure", p.mExposureCompensation},
+				 {"operator", p.mOperator},
+				 {"gamma", p.mUseGamma}};
 	}
-	
+
 	friend void from_json(const json &j, ToneMappingPass &p) {
-		p.mOperator = j.value("operator", Operator::Linear);
+		p.mOperator				= j.value("operator", Operator::Linear);
 		p.mExposureCompensation = j.value("exposure", 1.f);
 		p.mUseGamma				= j.value("gamma", true);
+
+		p.mJetMax		 = j.value("jet_max", 10.0f);
+		p.mJetMaxUpBound = j.value("jet_max_up_bound", 8.0f);
 	}
-	
+
+	bool mJetShowTint{false};
+	float mJetMax{10.0f};
+	float mJetMaxUpBound{8.0f};
+
 	bool mUseGamma{true};
-	float mExposureCompensation{ 1 };
-	Operator mOperator{ Operator::Linear };
+	float mExposureCompensation{1};
+	Operator mOperator{Operator::Linear};
 };
 
-KRR_ENUM_DEFINE(ToneMappingPass::Operator, { 
-	{ ToneMappingPass::Operator::Linear, "linear" },
-	{ ToneMappingPass::Operator::Reinhard, "reinhard" },
-	{ ToneMappingPass::Operator::Aces, "aces" },
-	{ ToneMappingPass::Operator::Uncharted2, "uncharted2" },
-	{ ToneMappingPass::Operator::HejiHable, "hejihable" },
-	{ ToneMappingPass::Operator::Lin2Srgb, "lin2srgb" },
-})
+KRR_ENUM_DEFINE(ToneMappingPass::Operator,
+				{
+					{ToneMappingPass::Operator::Linear, "linear"},
+					{ToneMappingPass::Operator::Reinhard, "reinhard"},
+					{ToneMappingPass::Operator::Aces, "aces"},
+					{ToneMappingPass::Operator::Uncharted2, "uncharted2"},
+					{ToneMappingPass::Operator::HejiHable, "hejihable"},
+					{ToneMappingPass::Operator::Lin2Srgb, "lin2srgb"},
+					{ToneMappingPass::Operator::Jet, "jet"},
+				})
 
 NAMESPACE_END(krr)

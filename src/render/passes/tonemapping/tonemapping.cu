@@ -59,14 +59,42 @@ KRR_CALLABLE RGB linearToSrgb(RGB color) {
 	return result;
 }
 
+KRR_DEVICE_FUNCTION RGB colorJetMap(float vIn, float vMax) {
+	RGB out = RGB(1.f, 1.f, 1.f);
+	float v = vIn;
+	if (v < (0.25 * vMax)) {
+		out[0] = 0;
+		out[1] = 4 * v / vMax;
+	} else if (v < (0.5 * vMax)) {
+		out[0] = 0;
+		out[2] = 1 + 4 * (0.25 * vMax - v) / vMax;
+	} else if (v < (0.75 * vMax)) {
+		out[0] = 4 * (v - 0.5 * vMax) / vMax;
+		out[2] = 0;
+	} else {
+		v	   = min(v, vMax);
+		out[1] = 1 + 4 * (0.75 * vMax - v) / vMax;
+		out[2] = 0;
+	}
+	return out;
+}
+
 void ToneMappingPass::renderUI() {
-	static const char *operators[] = {"Linear",		"Reinhard",	 "Aces",
-									  "Uncharted2", "HejiHable", "Lin2Srgb"};
+	static const char *operators[] = {"Linear",	   "Reinhard", "Aces", "Uncharted2",
+									  "HejiHable", "Lin2Srgb", "Jet"};
 	ui::Checkbox("Enabled", &mEnable);
 	if (mEnable) {
 		ui::DragFloat("Exposure compensation", &mExposureCompensation, 0.01, 0.01, 100, "%.2f");
 		ui::Combo("Tonemap operator", (int *) &mOperator, operators, (int) Operator::NumsOperators);
 		ui::Checkbox("Use Gamma", &mUseGamma);
+
+		if (mOperator == Operator::Jet) {
+			ui::SliderFloat("Show Scalar Jet UpBound[log2]", &mJetMaxUpBound, 0.0f, 20.0f);
+			const float jetMaxExp = pow(2, mJetMaxUpBound);
+			ui::SliderFloat("Show Scalar Jet Max", &mJetMax, 0.1f, jetMaxExp);
+			mJetMax = clamp(mJetMax, 0.0001f, jetMaxExp);
+			ui::Checkbox("Show Tint", &mJetShowTint);
+		}
 	}
 }
 
@@ -75,10 +103,15 @@ void ToneMappingPass::render(RenderContext *context) {
 	CUstream &stream			 = KRR_DEFAULT_STREAM;
 	RGB colorTransform			 = RGB(mExposureCompensation);
 	CudaRenderTarget frameBuffer = context->getColorTexture()->getCudaRenderTarget();
+
+	const auto frameSize = getFrameSize();
+	const int width = frameSize[0], height = frameSize[1];
 	GPUParallelFor(
-		getFrameSize()[0] * getFrameSize()[1],
+		width * height,
 		KRR_DEVICE_LAMBDA(int pixelId) {
 			RGB color = frameBuffer.read(pixelId).head<3>() * colorTransform;
+			float v	  = 0.0f;
+
 			switch (mOperator) {
 				case krr::ToneMappingPass::Operator::Linear:
 					break;
@@ -97,6 +130,13 @@ void ToneMappingPass::render(RenderContext *context) {
 				case krr::ToneMappingPass::Operator::Lin2Srgb:
 					color = linearToSrgb(color);
 					break;
+				case krr::ToneMappingPass::Operator::Jet:
+					v = color.mean();
+					if (mJetShowTint) {
+						v = float(pixelId % width) / width;
+						v *= mJetMax; // Scale to [0, mJetMax]
+					}
+					color = colorJetMap(v, mJetMax);
 				default:
 					break;
 			}
