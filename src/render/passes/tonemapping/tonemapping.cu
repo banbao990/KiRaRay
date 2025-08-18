@@ -94,6 +94,9 @@ void ToneMappingPass::renderUI() {
 			ui::SliderFloat("Show Scalar Jet Max", &mJetMax, 0.1f, jetMaxExp);
 			mJetMax = clamp(mJetMax, 0.0001f, jetMaxExp);
 			ui::Checkbox("Show Tint", &mJetShowTint);
+			if (mJetShowTint) {
+				ui::Checkbox("Vertical", &mJetShowTintVertical);
+			}
 		}
 	}
 }
@@ -133,7 +136,11 @@ void ToneMappingPass::render(RenderContext *context) {
 				case krr::ToneMappingPass::Operator::Jet:
 					v = color.mean();
 					if (mJetShowTint) {
-						v = float(pixelId % width) / width;
+						if (mJetShowTintVertical) {
+							v = float(pixelId / width) / height;
+						} else {
+							v = float(pixelId % width) / width;
+						}
 						v *= mJetMax; // Scale to [0, mJetMax]
 					}
 					color = colorJetMap(v, mJetMax);

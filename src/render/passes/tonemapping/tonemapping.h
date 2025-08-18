@@ -52,6 +52,7 @@ private:
 	}
 
 	bool mJetShowTint{false};
+	bool mJetShowTintVertical{false};
 	float mJetMax{10.0f};
 	float mJetMaxUpBound{8.0f};
 
