@@ -161,6 +161,7 @@ void writeErrorToRenderTarget(CudaRenderTarget &renderTarget, float* errorBuffer
 					c[0] = 4 * (v - 0.5 * jetVMax) / jetVMax;
 					c[2] = 0;
 				} else {
+					v	 = min(v, jetVMax);
 					c[1] = 1 + 4 * (0.75 * jetVMax - v) / jetVMax;
 					c[2] = 0;
 				}
