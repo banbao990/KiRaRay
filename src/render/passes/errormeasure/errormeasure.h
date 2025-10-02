@@ -48,6 +48,7 @@ protected:
 	string mReferenceImagePath;
 	bool mNeedsEvaluate{}, mContinuousEvaluate{};
 	bool mLogResults{}, mSaveResults{}, mExpSave{};
+	uint mRandomOffset{0}; // seed
 	size_t mFrameNumber{0}, mEvaluateInterval{1};
 	std::vector<EvaluationData> mEvaluationResults;
 	CpuTimer::TimePoint mStartTime;
@@ -78,6 +79,7 @@ protected:
 		p.mJetColorMapVMax		   = j.value("vJetMax", 0.01f);
 		p.mJetColorMapVMaxAdjusted = j.value("vJetMaxAdjusted", 0.05f);
 		p.mShowReferenceImage	   = j.value("showReferenceImage", false);
+		p.mRandomOffset			   = j.value("random_offset", 0);
 
 		p.mExpSave = j.value("exp_save", false);
 		p.mSaveResults |= p.mExpSave;

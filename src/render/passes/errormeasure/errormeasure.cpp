@@ -82,6 +82,7 @@ void ErrorMeasurePass::finalize() {
 			data.push_back(e.metrics);
 		}
 		result["timesteps"] = timesteps, result["timepoints"] = timepoints, result["data"] = data;
+		result["random_offset"] = mRandomOffset;
 		File::saveJSON(save_path, result);
 		logInfo("Saved error evaluation data to " + save_path.string());
 	}
